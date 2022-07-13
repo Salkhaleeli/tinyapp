@@ -13,7 +13,7 @@ charactersLength));
  return result;
 }
 
-generateRandomString(6)
+// generateRandomString(6)
 
 app.set("view engine", "ejs");
 
@@ -24,23 +24,45 @@ const urlDatabase = {
 
 app.use(express.urlencoded({ extended: true }));
 
-app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
-});
-app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
-});
- app.get("/urls", (req, res) => {
+app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
+app.post("/urls", (req, res) => {
+  if (!req.body.longURL) {
+    return res.status(400).send('Need to pass longURL')
+  }
+  let shortUrl = generateRandomString(6)
+  urlDatabase[shortUrl] = req.body.longURL;
+  res.redirect(`/urls/${shortUrl}`);
+});
+
+app.get("/urls/new", (req, res) => {
+  res.render("urls_new");
+});
+
 app.get("/urls/:id", (req, res) => {
-  console.log(req.params.id);
+  // console.log(req.params.id);
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render("urls_show", templateVars);
 });
+
+app.get('/u/:id',(req, res) => {
+  // check if long URL exists
+  const longURL = urlDatabase[req.params.id];
+  if (longURL) {
+    res.redirect(longURL);
+  } else {
+    res.status(404).redirect('https://http.cat/404');
+  }
+});
+
+app.post("/urls/delete/:id", (req, res)=> {
+  console.log(req.params.id);
+  delete urlDatabase[req.params.id];
+  res.redirect("/urls")
+})
 
 
 app.listen(PORT, () => {
