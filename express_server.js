@@ -58,7 +58,7 @@ app.get('/u/:id',(req, res) => {
   }
 });
 
-app.post("/urls/delete/:id", (req, res)=> {
+app.post("/urls/:id/delete", (req, res)=> {
   console.log(req.params.id);
   delete urlDatabase[req.params.id];
   res.redirect("/urls")
