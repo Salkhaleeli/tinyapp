@@ -17,22 +17,15 @@
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
-      <% if (user) {%>
-      </ul>
+        <% if (user) {%>
         <form method="POST" action="/logout" class="form-inline my-2 my-lg-0">
           <h4>Logged In As: <%=user.email %> </h4>  
           <button type="submit" class="btn btn-outline-dark">Logout</button>
         </form>
       <%} else { %>
-      </ul>
-      <form method="POST" action="/login" class="form-inline my-2 my-lg-0">
-        <input input class="form-control mr-sm-2" type="text" name="username" placeholder="Username" />
-        <button type="submit" class="btn btn-outline-dark">Login</button>
-      </form>
-      <a class="nav-item nav-link" href="/register">
-        <button type="submit" class="btn btn-outline-dark">Register</button>
-      </a>
-      <% } %>
+        <a class="nav-item nav-link" href="/login">Login</a>
+        <a class="nav-item nav-link" href="/register">register</a>
+        <% } %>
     </div>
   </nav>
 </header>
