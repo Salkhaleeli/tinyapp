@@ -14,10 +14,11 @@ app.use(express.urlencoded({ extended: true }));
 
 //global vars
 
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
+const urlDatabase = {};
+
+const defTemplateVars = {
+  user: null
+}
 
 const users = {};
 
@@ -25,53 +26,76 @@ const users = {};
 //GET
 
 app.get('/login', (req,res)=>{
-  res.render('login')
+  res.render('login', defTemplateVars)
 })
 
 app.get('/register', (req,res)=>{
-  res.render('registration')
+  res.render('registration', defTemplateVars)
 })
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, user: users[req.cookies["user_id"]] };
-  res.render("urls_index", templateVars);
+  const userURl = urlsForUser(req.cookies["user_id"]);
+  const templateVars = { urls: userURl, user: users[req.cookies["user_id"]] };
+  if (templateVars.user) {
+    res.render("urls_index", templateVars);
+  } else {
+    res.render('urls_index', defTemplateVars)
+  }
 });
 
 app.get('/urls/new', (req, res)=>{
   let templateVars = {user: users[req.cookies["user_id"]]}
-  res.render('urls_new', templateVars)
+  if (templateVars.user) {
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect('/login')
+  }
 })
+
+app.get("/u/:id", (req, res) => {
+  const longUrl = urlDatabase[req.params.shortURL].longURL;
+  // console.log('urlDatabase', urlDatabase);
+  res.redirect(longUrl);
+});
 
 app.get("/urls/:id", (req, res) => {
   const templateVars = { id: req.params.id,
-    longURL: urlDatabase[req.params.id], 
+    longURL: urlDatabase[req.params.shortURL].longURL,
     user: users[req.cookies["user_id"]]};
   res.render("urls_show", templateVars);
-});
-
-app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id]
-  res.redirect(longURL);
 });
 
 //post
 
 app.post('/urls/:id/delete', (req, res)=>{
-  delete urlDatabase[req.params.id]
-  res.redirect('/urls')
+  if (req.cookies['user_id'] === urlDatabase[req.params.shortURL].userID) {
+    delete urlDatabase[req.params.shortURL];
+    res.redirect('/urls');
+  } else {
+    res.status(404);
+    res.send('can\'t perform this operation')
+  }
 });
 
 app.post('/urls', (req, res)=>{
-  let shortURL = generateRandomString(6);
-  urlDatabase[shortURL] = req.body.longURL
-  res.redirect(`/urls/${shortURL}`)
+  const shortURL = generateRandomString(6);
+  urlDatabase[shortURL] = { 
+    longURL: req.body.longURL,
+    userID: req.cookies['user_id'],
+  } 
+  res.redirect('/urls');
 });  
 
 app.post('/urls/:id/modify', (req, res)=>{
-  let url = req.params.id;
-  let newURL = req.body.longURL;
-  urlDatabase[url] = newURL
-  res.redirect('/urls')
+  if (req.cookies['user_id'] === urlDatabase[req.params.shortURL].userID) {
+    const url = req.params.shortURL;
+    const newUrl = req.body.URL;
+    urlDatabase[url].longURL = newUrl;
+    res.redirect('/urls');
+  } else {
+    res.status(404);
+    res.send('can\'t perform this operation')
+  }
 });
 
 app.post('/login',(req,res)=>{
@@ -142,7 +166,18 @@ function emailLookup(email) {
     if (users[user].email === email) {
       return user;
     } else {
-      return false;
+      return false
     }
   }
+  return false;
+};
+
+function urlsForUser(id) {
+  const userURLs = {};
+  for(let url in urlDatabase) {
+    if(urlDatabase[url].userID === id) {
+      userURLs[url] = urlDatabase[url];
+    }
+  }
+  return userURLs;
 }
