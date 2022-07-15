@@ -17,10 +17,10 @@
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
-      <% if (username) {%>
+      <% if (user) {%>
       </ul>
         <form method="POST" action="/logout" class="form-inline my-2 my-lg-0">
-          <h4>Logged In As: <%=username %> </h4>  
+          <h4>Logged In As: <%=user.email %> </h4>  
           <button type="submit" class="btn btn-outline-dark">Logout</button>
         </form>
       <%} else { %>
