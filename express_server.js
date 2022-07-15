@@ -24,6 +24,10 @@ const users = {};
 
 //GET
 
+app.get('/login', (req,res)=>{
+  res.render('login')
+})
+
 app.get('/register', (req,res)=>{
   res.render('registration')
 })
@@ -71,8 +75,21 @@ app.post('/urls/:id/modify', (req, res)=>{
 });
 
 app.post('/login',(req,res)=>{
-  // res.cookie('username', req.body.username)
-  res.redirect('/urls')
+  let email = req.body.email;
+  let password = req.body.password;
+  let user = emailLookup(email);
+  if (emailLookup(email)) {
+    if (password === users[user].password) {
+      res.cookie('user_id', users[user].id);
+      res.redirect('/urls');
+    }else{
+      res.status(403);
+      res.send('Invalid Password');
+    }
+  } else{
+    res.status(403);
+    res.send('Invalid email please register');
+  }
 });
 
 app.post('/logout',(req,res)=>{
@@ -81,15 +98,22 @@ app.post('/logout',(req,res)=>{
 });
 
 app.post('/register', (req,res) => {
+  let email = req.body.email;
+  let password = req.body.password;
+  if (email === "" || password === "") {
+    res.status(400);
+    res.send('Invalid email or password');
+  } else if (emailLookup(email)) {
+    res.status(400);
+    res.send('Email already exists please remember your password or try forget my password');
+  }
   const id = generateRandomString(6);
   users[id] = { 
     id : id,
     email: req.body.email,
     password: req.body.password,
   }
-  // console.log(req.body);
   res.cookie('user_id', id);
-  console.log(users);
   res.redirect('/urls');
 });
 
@@ -111,4 +135,14 @@ const generateRandomString = function(length) {
 charactersLength));
  }
  return result;
+}
+
+function emailLookup(email) {
+  for(let user in users) {
+    if (users[user].email === email) {
+      return user;
+    } else {
+      return false;
+    }
+  }
 }
