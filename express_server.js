@@ -10,6 +10,8 @@ app.use(cookieParser());
 
 app.set('view engine', 'ejs');
 
+const bcrypt = require('bcryptjs');
+
 app.use(express.urlencoded({ extended: true }));
 
 //global vars
@@ -102,17 +104,18 @@ app.post('/login',(req,res)=>{
   let email = req.body.email;
   let password = req.body.password;
   let user = emailLookup(email);
-  if (emailLookup(email)) {
-    if (password === users[user].password) {
+  if (user) {
+    const passwordMatching = bcrypt.compareSync(password, users[user].password);
+    if (passwordMatching) {
       res.cookie('user_id', users[user].id);
       res.redirect('/urls');
-    }else{
+    } else {
       res.status(403);
       res.send('Invalid Password');
     }
-  } else{
+  } else {
     res.status(403);
-    res.send('Invalid email please register');
+    res.send('invalid email please register');
   }
 });
 
@@ -124,6 +127,7 @@ app.post('/logout',(req,res)=>{
 app.post('/register', (req,res) => {
   let email = req.body.email;
   let password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
   if (email === "" || password === "") {
     res.status(400);
     res.send('Invalid email or password');
@@ -134,8 +138,8 @@ app.post('/register', (req,res) => {
   const id = generateRandomString(6);
   users[id] = { 
     id : id,
-    email: req.body.email,
-    password: req.body.password,
+    email: email,
+    password: hashedPassword
   }
   res.cookie('user_id', id);
   res.redirect('/urls');
