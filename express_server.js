@@ -1,6 +1,63 @@
 const express = require("express");
 const app = express();
-const PORT = 8080; // default port 8080
+const PORT = 8080;
+
+app.set('view engine', 'ejs');
+app.use(express.urlencoded({ extended: true }));
+
+
+const urlDatabase = {
+  "b2xVn2": "http://www.lighthouselabs.ca",
+  "9sm5xK": "http://www.google.com"
+};
+
+//GET
+
+app.get("/urls", (req, res) => {
+  const templateVars = { urls: urlDatabase };
+  res.render("urls_index", templateVars);
+});
+
+app.get('/urls/new', (req, res)=>{
+  res.render('urls_new')
+})
+
+app.get("/urls/:id", (req, res) => {
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id]};
+  res.render("urls_show", templateVars);
+});
+
+app.get("/u/:id", (req, res) => {
+  const longURL = urlDatabase[req.params.id]
+  res.redirect(longURL);
+});
+
+//post
+app.post('/urls/:id/delete', (req, res)=>{
+  delete urlDatabase[req.params.id]
+  res.redirect('/urls')
+})
+
+app.post('/urls', (req, res)=>{
+  let shortURL = generateRandomString(6);
+  urlDatabase[shortURL] = req.body.longURL
+  res.redirect('/urls')
+})  
+
+app.post('/urls/:id/modify', (req, res)=>{
+  let url = req.params.id;
+  let newURL = req.body.longURL;
+  urlDatabase[url] = newURL
+  res.redirect('/urls')
+})
+
+
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
+});
+
+
+//functions
 
 const generateRandomString = function(length) {
   var result           = '';
@@ -13,64 +70,64 @@ charactersLength));
  return result;
 }
 
-// generateRandomString(6)
+// // generateRandomString(6)
 
-app.set("view engine", "ejs");
+// app.set("view engine", "ejs");
 
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
+// const urlDatabase = {
+//   "b2xVn2": "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com"
+// };
 
-app.use(express.urlencoded({ extended: true }));
+// app.use(express.urlencoded({ extended: true }));
 
-app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
-  res.render("urls_index", templateVars);
-});
+// app.post("/urls/login", (req, res) =>{
+//   console.log('What is this' ,req.body);
+// })
 
-app.post("/urls", (req, res) => {
-  if (!req.body.longURL) {
-    return res.status(400).send('Need to pass longURL')
-  }
-  let shortUrl = generateRandomString(6)
-  urlDatabase[shortUrl] = req.body.longURL;
-  res.redirect(`/urls/${shortUrl}`);
-});
+// app.get("/urls", (req, res) => {
+//   const templateVars = { urls: urlDatabase, username: req.cookies["username"] };
+//   res.render("urls_index", templateVars);
+// });
 
-app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
-});
+// app.get("/urls/new", (req, res) => {
+//   const templateVars = {username: req.cookies['username']};
+//   res.render("urls_new", templateVars);
+// });
+// app.post("/urls", (req, res) => {
+//   if (!req.body.longURL) {
+//     return res.status(400).send('Need to pass longURL')
+//   }
+//   let shortUrl = generateRandomString(6)
+//   urlDatabase[shortUrl] = req.body.longURL;
+//   res.redirect(`/urls/${shortUrl}`);
+// });
 
-app.get("/urls/:id", (req, res) => {
-  // console.log(req.params.id);
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
-  res.render("urls_show", templateVars);
-});
 
-app.get('/u/:id',(req, res) => {
-  // check if long URL exists
-  const longURL = urlDatabase[req.params.id];
-  if (longURL) {
-    res.redirect(longURL);
-  } else {
-    res.status(404).redirect('https://http.cat/404');
-  }
-});
+// app.get("/urls/:id", (req, res) => {
+//   // console.log(req.params.id);
+//   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id]};
+//   res.render("urls_show", templateVars);
+// });
 
-app.post("/urls/:id/delete", (req, res)=> {
-  console.log(req.params.id);
-  delete urlDatabase[req.params.id];
-  res.redirect("/urls")
-})
+// app.get('/u/:id',(req, res) => {
+//   const longURL = urlDatabase[req.params.id];
+//   if (longURL) {
+//     res.redirect(longURL);
+//   } else {
+//     res.status(404).redirect('https://http.cat/404');
+//   }
+// });
 
-app.post("/urls/:id", (req, res)=>{
-  let shortUrl = req.params.id;
-  let newLongURL = req.body.longURL;
-  urlDatabase[shortUrl] = newLongURL;
-  res.redirect("/urls")
-})
+// app.post("/urls/:id/delete", (req, res)=> {
+//   // console.log(req.params.id);
+//   delete urlDatabase[req.params.id];
+//   res.redirect("/urls")
+// })
 
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
+// app.post("/urls/:id", (req, res)=>{
+//   let shortUrl = req.params.id;
+//   let newLongURL = req.body.longURL;
+//   urlDatabase[shortUrl] = newLongURL;
+//   res.redirect("/urls")
+// })
